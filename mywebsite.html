@@ -1,0 +1,261 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Website</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            width: 300px;
+            margin: 100px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .navbar {
+            background-color: #333;
+            overflow: hidden;
+        }
+        .navbar a {
+            float: left;
+            display: block;
+            color: #f2f2f2;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+        }
+        .navbar a:hover {
+            background-color: #ddd;
+            color: black;
+        }
+        #timer {
+            float: right;
+            color: white;
+            padding: 14px 16px;
+            font-size: 1.2em;
+        }
+        .hidden {
+            display: none;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Login Form -->
+<div id="loginContainer" class="container">
+    <h2>Login</h2>
+    <input type="text" id="loginUsername" placeholder="Username">
+    <input type="password" id="loginPassword" placeholder="Password">
+    <button onclick="login()">Login</button>
+    <p>Don't have an account? <a href="#" onclick="showRegister()">Register</a></p>
+</div>
+
+<!-- Registration Form -->
+<div id="registerContainer" class="container hidden">
+    <h2>Register</h2>
+    <input type="text" id="registerUsername" placeholder="Username">
+    <input type="password" id="registerPassword" placeholder="Password">
+    <button onclick="register()">Register</button>
+    <p>Already have an account? <a href="#" onclick="showLogin()">Login</a></p>
+</div>
+
+<!-- Home Page -->
+<div id="homeContainer" class="hidden">
+    <div class="navbar">
+        <a href="#" onclick="showHome()">Home</a>
+        <a href="#" onclick="showPage1()">Page 1</a>
+        <a href="#" onclick="showPage2()">Page 2</a>
+        <a href="#" onclick="showPage3()">sub page 3</a>
+        <a href="#" onclick="showPage4()">Sub page 4</a>
+        <a href="#" onclick="showPage5()">Sub page 5</a>
+        <div id="timer">00:00:00</div>
+        <a href="#" style="float: right;" onclick="logout()">Logout</a>
+    </div>
+    
+    <div id="homeContent" class="container">
+        <h2>Welcome to the Home Page</h2>
+        <p>Session timer is running automatically!</p>
+    </div>
+    
+    <div id="page1Content" class="container hidden">
+        <h2>Page 1</h2>
+        <p>This is Page 1 content.</p>
+    </div>
+    
+    <div id="page2Content" class="container hidden">
+        <h2>Page 2</h2>
+        <p>This is Page 2 content.</p>
+    </div>
+    <div id="page3Content" class="container hidden">
+        <h2>Page 3</h2>
+        <p>This is the content for Page 3.</p>
+    </div>
+    <div id="page4Content" class="container hidden">
+        <h2>Page 4</h2>
+        <p>This is the content for Page 4.</p>
+    </div>
+    <div id="page5Content" class="container hidden">
+        <h2>Page 5</h2>
+        <p>This is the content for Page 5.</p>
+    </div>
+</div>
+
+<script>
+    let users = [];
+    let timerInterval;
+    let seconds = 0, minutes = 0, hours = 0;
+
+    function updateTimer() {
+        seconds++;
+        if (seconds === 60) {
+            seconds = 0;
+            minutes++;
+            if (minutes === 60) {
+                minutes = 0;
+                hours++;
+            }
+        }
+        document.getElementById('timer').textContent = 
+            `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    function startTimer() {
+        if (!timerInterval) {
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+    }
+
+    function resetTimer() {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        seconds = minutes = hours = 0;
+        document.getElementById('timer').textContent = '00:00:00';
+    }
+
+    // Auth functions
+    function showRegister() {
+        document.getElementById('loginContainer').classList.add('hidden');
+        document.getElementById('registerContainer').classList.remove('hidden');
+    }
+
+    function showLogin() {
+        document.getElementById('registerContainer').classList.add('hidden');
+        document.getElementById('loginContainer').classList.remove('hidden');
+    }
+
+    function register() {
+        const username = document.getElementById('registerUsername').value;
+        const password = document.getElementById('registerPassword').value;
+        if (username && password) {
+            users.push({ username, password });
+            alert('Registration successful! Please login.');
+            showLogin();
+        } else {
+            alert('Please fill in all fields.');
+        }
+    }
+
+    function login() {
+        const username = document.getElementById('loginUsername'). value;
+        const password = document.getElementById('loginPassword').value;
+        const user = users.find(u => u.username === username && u.password === password);
+
+        if (user) {
+            document.getElementById('loginContainer').classList.add('hidden');
+            document.getElementById('homeContainer').classList.remove('hidden');
+            startTimer(); 
+        } else {
+            alert('Invalid credentials!');
+        }
+    }
+
+    function logout() {
+        document.getElementById('homeContainer').classList.add('hidden');
+        document.getElementById('loginContainer').classList.remove('hidden');
+        resetTimer(); // Reset timer on logout
+    }
+
+    // Page navigation
+    function showHome() {
+        document.getElementById('homeContent').classList.remove('hidden');
+        document.getElementById('page1Content').classList.add('hidden');
+        document.getElementById('page2Content').classList.add('hidden');
+        document.getElementById('page3Content').classList.add('hidden');
+        document.getElementById('page4Content').classList.add('hidden');
+        document.getElementById('page5Content').classList.add('hidden');
+    }
+
+    function showPage1() {
+        document.getElementById('homeContent').classList.add('hidden');
+        document.getElementById('page1Content').classList.remove('hidden');
+        document.getElementById('page2Content').classList.add('hidden');
+        document.getElementById('page3Content').classList.add('hidden');
+        document.getElementById('page4Content').classList.add('hidden');
+        document.getElementById('page5Content').classList.add('hidden');
+    }
+
+    function showPage2() {
+        document.getElementById('homeContent').classList.add('hidden');
+        document.getElementById('page1Content').classList.add('hidden');
+        document.getElementById('page2Content').classList.remove('hidden');
+        document.getElementById('page3Content').classList.add('hidden');
+        document.getElementById('page4Content').classList.add('hidden');
+        document.getElementById('page5Content').classList.add('hidden');
+
+    }
+    function showPage3() {
+        document.getElementById('homeContent').classList.add('hidden');
+        document.getElementById('page1Content').classList.add('hidden');
+        document.getElementById('page2Content').classList.add('hidden');
+        document.getElementById('page3Content').classList.remove('hidden');
+        document.getElementById('page4Content').classList.add('hidden');
+        document.getElementById('page5Content').classList.add('hidden');
+        
+    }
+    function showPage4() {
+        document.getElementById('homeContent').classList.add('hidden');
+        document.getElementById('page1Content').classList.add('hidden');
+        document.getElementById('page2Content').classList.add('hidden');
+        document.getElementById('page3Content').classList.add('hidden');
+        document.getElementById('page4Content').classList.remove('hidden');
+        document.getElementById('page5Content').classList.add('hidden');
+        
+    }
+    function showPage5() {
+        document.getElementById('homeContent').classList.add('hidden');
+        document.getElementById('page1Content').classList.add('hidden');
+        document.getElementById('page2Content').classList.add('hidden');
+        document.getElementById('page3Content').classList.add('hidden');
+        document.getElementById('page4Content').classList.add('hidden');
+        document.getElementById('page5Content').classList.remove('hidden');
+        
+    }
+</script>
+
+</body>
+</html>
