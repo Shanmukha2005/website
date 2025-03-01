@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indian E-Commerce</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+        }
+
+        .header {
+            background: #232f3e;
+            padding: 1rem;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .search-bar {
+            flex: 0 1 600px;
+            margin: 0 2rem;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 0.8rem;
+            border-radius: 4px;
+            border: none;
+            font-size: 1rem;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 250px;
+            object-fit: contain;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            background: #f8f8f8;
+        }
+
+        .category-filter {
+            padding: 1rem;
+            background: white;
+            border-bottom: 1px solid #ddd;
+            position: sticky;
+            top: 68px;
+            z-index: 99;
+        }
+
+        .category-filter button {
+            margin-right: 1rem;
+            padding: 0.6rem 1.2rem;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .category-filter button:hover {
+            background: #232f3e;
+            color: white;
+        }
+
+        .cart-sidebar {
+            position: fixed;
+            right: -320px;
+            top: 0;
+            width: 320px;
+            height: 100%;
+            background: white;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            transition: right 0.3s ease;
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .cart-visible {
+            right: 0;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .cart-item {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            background: #f8f8f8;
+            border-radius: 4px;
+        }
+
+        .cart-item img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            border-radius: 4px;
+            background: #fff;
+            padding: 4px;
+            border: 1px solid #ddd;
+        }
+
+        button {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Website</h1>
+        <div class="search-bar">
+            <input type="text" placeholder="Search products..." id="searchInput">
+        </div>
+        <nav>
+            <button onclick="toggleCart()">Cart (<span id="cartCount">0</span>)</button>
+            <button id="authButton" onclick="toggleAuthModal('login')">Login</button>
+        </nav>
+    </header>
+
+    <div class="category-filter">
+        <button onclick="filterProducts('all')">All</button>
+        <button onclick="filterProducts('electronics')">Electronics</button>
+        <button onclick="filterProducts('fashion')">Fashion</button>
+        <button onclick="filterProducts('home')">Home</button>
+    </div>
+
+    <div class="products-grid" id="productsGrid"></div>
+
+    <!-- Auth Modal -->
+    <div id="authModal" class="modal">
+        <div id="loginForm">
+            <h2>Login</h2>
+            <input type="text" id="loginUsername" placeholder="Username">
+            <input type="password" id="loginPassword" placeholder="Password">
+            <button onclick="handleLogin()">Login</button>
+            <p>Don't have an account? <a href="#" onclick="showRegisterForm()">Create account</a></p>
+        </div>
+
+        <div id="registerForm" style="display: none;">
+            <h2>Register</h2>
+            <input type="text" id="registerUsername" placeholder="Username">
+            <input type="password" id="registerPassword" placeholder="Password">
+            <button onclick="handleRegistration()">Register</button>
+            <p>Already have an account? <a href="#" onclick="showLoginForm()">Login here</a></p>
+        </div>
+    </div>
+
+    <!-- Cart Sidebar -->
+    <div class="cart-sidebar" id="cartSidebar">
+        <h2>Shopping Cart</h2>
+        <div id="cartItems" style="margin: 1rem 0;"></div>
+        <p style="font-weight: bold; font-size: 1.2rem;">Total: ₹<span id="cartTotal">0</span></p>
+        <button onclick="checkout()" style="width: 100%; padding: 1rem; background: #232f3e; color: white; border: none;">Checkout</button>
+    </div>
+
+    <script>
+        // Products Data (INR Prices)
+        const products = [
+            { id: 1, name: "Wireless Headphones", price: 2999, category: "electronics", image: "https://source.unsplash.com/random/400x300/?headphones" },
+            { id: 2, name: "Smartwatch", price: 8999, category: "electronics", image: "https://source.unsplash.com/random/400x300/?smartwatch" },
+            { id: 3, name: "Leather Jacket", price: 4999, category: "fashion", image: "https://source.unsplash.com/random/400x300/?jacket" },
+            { id: 4, name: "Running Shoes", price: 3999, category: "fashion", image: "https://source.unsplash.com/random/400x300/?shoes" },
+            { id: 5, name: "Coffee Maker", price: 2499, category: "home", image: "https://source.unsplash.com/random/400x300/?coffee-maker" },
+            { id: 6, name: "Air Fryer", price: 5999, category: "home", image: "https://source.unsplash.com/random/400x300/?air-fryer" }
+        ];
+
+        // User System
+        let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+        // Auth Functions
+        function toggleAuthModal(type) {
+            const modal = document.getElementById('authModal');
+            modal.style.display = 'block';
+            type === 'login' ? showLoginForm() : showRegisterForm();
+        }
+
+        function showLoginForm() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+        }
+
+        function showRegisterForm() {
+            document.getElementById('registerForm').style.display = 'block';
+            document.getElementById('loginForm').style.display = 'none';
+        }
+
+        function handleLogin() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            const user = users.find(u => u.username === username && u.password === password);
+
+            if(user) {
+                currentUser = user;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                mergeCarts();
+                updateAuthState();
+                alert('Login successful!');
+                document.getElementById('authModal').style.display = 'none';
+            } else {
+                alert('Invalid credentials!');
+            }
+        }
+
+        function handleRegistration() {
+            const username = document.getElementById('registerUsername').value;
+            const password = document.getElementById('registerPassword').value;
+
+            if(users.some(u => u.username === username)) {
+                alert('Username already exists!');
+                return;
+            }
+
+            users.push({ username, password, cart: [] });
+            localStorage.setItem('users', JSON.stringify(users));
+            alert('Registration successful! Please login.');
+            showLoginForm();
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            updateAuthState();
+            alert('Logged out successfully!');
+        }
+
+        function updateAuthState() {
+            const authButton = document.getElementById('authButton');
+            if(currentUser) {
+                authButton.textContent = `Logout (${currentUser.username})`;
+                authButton.onclick = handleLogout;
+                cart = currentUser.cart;
+            } else {
+                authButton.textContent = 'Login';
+                authButton.onclick = () => toggleAuthModal('login');
+            }
+            updateCartDisplay();
+        }
+
+        // Cart System
+        function addToCart(productId) {
+            if(!currentUser) {
+                alert('Please login to add items to cart');
+                return;
+            }
+
+            const product = products.find(p => p.id === productId);
+            const existingItem = cart.find(item => item.id === productId);
+
+            if(existingItem) {
+                existingItem.quantity++;
+            } else {
+                cart.push({ ...product, quantity: 1 });
+            }
+
+            updateCartStorage();
+            updateCartDisplay();
+        }
+
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            updateCartStorage();
+            updateCartDisplay();
+        }
+
+        function updateCartStorage() {
+            if(currentUser) {
+                currentUser.cart = cart;
+                localStorage.setItem('users', JSON.stringify(users));
+            }
+            localStorage.setItem('cart', JSON.stringify(cart));
+        }
+
+        function updateCartDisplay() {
+            document.getElementById('cartCount').textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const cartItems = document.getElementById('cartItems');
+            
+            cartItems.innerHTML = cart.map(item => `
+                <div class="cart-item">
+                    <img src="${item.image}" alt="${item.name}">
+                    <div>
+                        <p><strong>${item.name}</strong></p>
+                        <p>₹${item.price.toLocaleString('en-IN')} x ${item.quantity}</p>
+                    </div>
+                    <button onclick="removeFromCart(${item.id})" style="background: red; color: white; border: none; padding: 5px 10px; border-radius: 4px;">X</button>
+                </div>
+            `).join('');
+
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            document.getElementById('cartTotal').textContent = total.toLocaleString('en-IN');
+        }
+
+        function mergeCarts() {
+            if(cart.length > 0 && currentUser) {
+                currentUser.cart = [...currentUser.cart, ...cart];
+                cart = currentUser.cart;
+                localStorage.setItem('users', JSON.stringify(users));
+                localStorage.setItem('cart', JSON.stringify(cart));
+            }
+        }
+
+        // Product Display
+        function renderProducts(productsArray) {
+            const grid = document.getElementById('productsGrid');
+            grid.innerHTML = productsArray.map(product => `
+                <div class="product-card">
+                    <img src="${product.image}" class="product-image" alt="${product.name}">
+                    <h3>${product.name}</h3>
+                    <p style="color: #b12704; margin: 10px 0;">₹${product.price.toLocaleString('en-IN')}</p>
+                    <button onclick="addToCart(${product.id})" style="background: #232f3e; color: white; padding: 10px; border: none; width: 100%; border-radius: 4px;">Add to Cart</button>
+                </div>
+            `).join('');
+        }
+
+        // Product Filtering
+        function filterProducts(category) {
+            const filtered = category === 'all' ? products : products.filter(p => p.category === category);
+            renderProducts(filtered);
+        }
+
+        // Search Functionality
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = products.filter(p => 
+                p.name.toLowerCase().includes(term) || 
+                p.category.toLowerCase().includes(term)
+            );
+            renderProducts(filtered);
+        });
+
+        // Cart Toggle
+        function toggleCart() {
+            document.getElementById('cartSidebar').classList.toggle('cart-visible');
+        }
+
+        // Checkout
+        function checkout() {
+            if(cart.length === 0) return alert('Your cart is empty!');
+            alert(`Order placed! Total: ₹${document.getElementById('cartTotal').textContent}`);
+            cart = [];
+            if(currentUser) currentUser.cart = [];
+            updateCartStorage();
+            updateCartDisplay();
+            toggleCart();
+        }
+
+        // Initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            renderProducts(products);
+            updateAuthState();
+            
+            // Close modals on outside click
+            document.addEventListener('click', (e) => {
+                if(e.target === document.getElementById('authModal')) {
+                    document.getElementById('authModal').style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
